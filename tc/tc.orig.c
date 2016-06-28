@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <syslog.h>/Users/chen/coding/iproute2/tc/tc.c
+#include <syslog.h>
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <sys/socket.h>
@@ -313,79 +313,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	// 执行 change 命令比 show 命令会增加 3-5us 延时左右
-	argc=5; my_show_queue_argv(&argc, argv);  	// class show 命令初始化
-	argc=12; my_change_queue_argv(&argc, argv); // class change 命令初始化
-
-	printf("debug: default %d argvs: %s, %s, %s, %s\n", argc, argv[1], argv[2], argv[3], argv[4]);
-	//argv[1]=
-	//return;
-
-	//int64_t count = 5; //查询次数
-
-	int64_t count=1000000; //测速 循环数 average latency: 3506 ns (4us) / real	0m7.015s / CPU 100%
-	unsigned int polling_interval=0; 			//采样间隔时间, 默认0，不休眠
-	polling_interval =  1; count=100000; 	// 增加采样间隔 1微秒 ; 37-42us / real	0m7.447s / CPU 1-2%
-	polling_interval = 10; count=100000; 	// 增加采样间隔10微秒 ; 47-50us / real	0m9.412s / CPU 1-2%
-	// #ifdef HAS_CLOCK_GETTIME_MONOTONIC //linux 不用这个定义
-	// 测速开始： 定义时间变量， 获取初始时间
-	int64_t i, delta;
-  struct timeval start, stop;
-	if (gettimeofday(&start, NULL) == -1) {
-      perror("gettimeofday");
-      return 1;
-  }
-
-	// 测速
-	for (i=0; i<count; i++){
-		ret = do_cmd(argc-1, argv+1);
-		if (polling_interval != 0) usleep(polling_interval);
-	}
-
+	ret = do_cmd(argc-1, argv+1);
 	rtnl_close(&rth);
 
-	// 获取结束时间并统计打印
-	if (gettimeofday(&stop, NULL) == -1) {
-		perror("gettimeofday");
-		return 1;
-	}
-	delta =
-			(stop.tv_sec - start.tv_sec) * 1000000000 + (stop.tv_usec - start.tv_usec) * 1000;
-	printf("average latency: %li ns\n", delta / (count * 2));
-  // 测速结束
-
 	return ret;
-}
-
-// 简化测试命令为： make && ./tc/tc -s show
-// 实际执行： default run command: tc -d -s class show dev s2-eth1
-void my_show_queue_argv(int *argc, char **argv){
-	// &argc=5;
-	++show_stats; // turn on stats 默认打开统计， 不需要 -s参数
-	// ++show_details; #turn of detail
-	//char *av=
-	argv[1]="class";
-	argv[2]="show";
-	argv[3]="dev";
-	argv[4]="s2-eth2";
-}
-
-// 简化测试命令为： make && ./tc/tc -s change
-// 实际执行： sudo tc class change dev s2-eth2 parent 1:fffe classid 1:2 htb rate 2mbit burst 15k
-void my_change_queue_argv(int *argc, char **argv){
-	// &argc=5;
-	++show_stats; // turn on stats 默认打开统计， 不需要 -s参数
-	// ++show_details; #turn of detail
-	//char *av=
-	argv[1]="class";
-	argv[2]="change";
-	argv[3]="dev";
-	argv[4]="s2-eth2";
-	argv[5]="parent";
-	argv[6]="1:fffe";
-	argv[7]="classid";
-	argv[8]="1:2";
-	argv[9]="htb";
-	argv[10]="rate";
-	argv[11]="2mbit";
 }

@@ -491,6 +491,14 @@ void print_tm(FILE * f, const struct tcf_t *tm)
 		fprintf(f, " expires %u sec", (unsigned)(tm->expires/hz));
 }
 
+void print_tcstats2_attr_empty(FILE *fp, struct rtattr *rta, char *prefix, struct rtattr **xstats)
+{
+	SPRINT_BUF(b1);
+	struct rtattr *tbs[TCA_STATS_MAX + 1];
+
+	parse_rtattr_nested(tbs, TCA_STATS_MAX, rta);
+}
+
 void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtattr **xstats)
 {
 	SPRINT_BUF(b1);
@@ -498,6 +506,7 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 
 	parse_rtattr_nested(tbs, TCA_STATS_MAX, rta);
 
+	tbs[TCA_STATS_BASIC]=0; //0 -关闭输出
 	if (tbs[TCA_STATS_BASIC]) {
 		struct gnet_stats_basic bs = {0};
 		memcpy(&bs, RTA_DATA(tbs[TCA_STATS_BASIC]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_BASIC]), sizeof(bs)));
@@ -505,13 +514,15 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 			prefix, (unsigned long long) bs.bytes, bs.packets);
 	}
 
+	tbs[TCA_STATS_QUEUE]=0; //0 -关闭输出
 	if (tbs[TCA_STATS_QUEUE]) {
 		struct gnet_stats_queue q = {0};
 		memcpy(&q, RTA_DATA(tbs[TCA_STATS_QUEUE]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_QUEUE]), sizeof(q)));
-		fprintf(fp, " (dropped %u, overlimits %u requeues %u) ",
+		fprintf(fp, " (dropped %u (cuc), overlimits %u requeues %u) ",
 			q.drops, q.overlimits, q.requeues);
 	}
 
+	tbs[TCA_STATS_RATE_EST]=0; //0 -关闭输出
 	if (tbs[TCA_STATS_RATE_EST]) {
 		struct gnet_stats_rate_est re = {0};
 		memcpy(&re, RTA_DATA(tbs[TCA_STATS_RATE_EST]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_RATE_EST]), sizeof(re)));
@@ -524,7 +535,7 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 		memcpy(&q, RTA_DATA(tbs[TCA_STATS_QUEUE]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_QUEUE]), sizeof(q)));
 		if (!tbs[TCA_STATS_RATE_EST])
 			fprintf(fp, "\n%s", prefix);
-		fprintf(fp, "backlog %s %up requeues %u ",
+		fprintf(fp, "backlog %s %up (cuc) requeues %u ",
 			sprint_size(q.backlog, b1), q.qlen, q.requeues);
 	}
 
@@ -577,4 +588,3 @@ compat_xstats:
 	if (tb[TCA_XSTATS] && xstats)
 		*xstats = tb[TCA_XSTATS];
 }
-

@@ -1,3 +1,37 @@
+# 队列拥塞控制仿真 (基于tc)
+
+目前基于 tc 的队列查询（带宽策略修改）的延时约为 40-50us。
+
+## tc 源代码准备与控制延时测速
+1. 初始编译, 移除不需要的  arpd, 避免出现 db185.h 找不到的情况
+```
+vi misc/Makefile
+# 删掉其中的 arpd
+TARGETS=ss nstat ifstat rtacct lnstat
+```
+2. 备份原有 tc.c 文件为 tc.orig.c
+3. 修改tc.c支持多轮循环测速, 增加show命令初始化函数 `my_show_queue_argv` 和change命令初始化函数 `my_change_queue_argv`
+4. 注释 tc_class.c tc_util.c 中的打印函数， 避免打印输出影响测速.
+5. 测速命令`make && time sudo ./tc/tc show`与结果
+
+- 相关测试参数与测速函数：
+- count: 测速的循环数
+- polling_interval: 采样间隔(us), usleep()时间
+- my_show_queue_argv()： 测速函数-查看队列状态
+- my_change_queue_argv()：测速函数-修改带宽状态
+
+测试函数 |循环数(count)|采样间隔(us)|平均延时(us)|总运行时间(s, time)|cpu利用率(vmstat 1)| 备注
+------------------|-----  |-------|--------|--------|----
+my_show_queue_argv  |1000000| 0   | 3.5  | 7.0   | 99%|
+my_show_queue_argv  |100000 | 1   | 37  | 7.4   | 1% |
+my_show_queue_argv  |100000 | 10  | 47  | 9.4   | 1% | 相对上一项延时增加的就是采样间隔的10ms
+my_change_queue_argv|100000 | 1   | 42  | 7.7   | 1% | 相对show增加5us
+my_change_queue_argv|100000 | 10  | 50  | 9.7   | 1% | 相对show增加3us
+
+
+# Orignal README.md
+
+
 This is a set of utilities for Linux networking.
 
 Information:

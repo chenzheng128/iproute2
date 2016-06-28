@@ -148,6 +148,11 @@ int filter_ifindex;
 __u32 filter_qdisc;
 __u32 filter_classid;
 
+int print_class_empty(const struct sockaddr_nl *who,
+		       struct nlmsghdr *n, void *arg)
+{
+	return 0;
+}
 int print_class(const struct sockaddr_nl *who,
 		       struct nlmsghdr *n, void *arg)
 {
@@ -185,46 +190,56 @@ int print_class(const struct sockaddr_nl *who,
 		fprintf(fp, "deleted ");
 
 	abuf[0] = 0;
+
+
+	//fprintf(fp, "01\n");// debug 打印信息
+
 	if (t->tcm_handle) {
 		if (filter_qdisc)
-			print_tc_classid(abuf, sizeof(abuf), TC_H_MIN(t->tcm_handle));
+			1; //print_tc_classid(abuf, sizeof(abuf), TC_H_MIN(t->tcm_handle));
 		else
-			print_tc_classid(abuf, sizeof(abuf), t->tcm_handle);
+			1; //print_tc_classid(abuf, sizeof(abuf), t->tcm_handle);
 	}
-	fprintf(fp, "class %s %s ", (char*)RTA_DATA(tb[TCA_KIND]), abuf);
+	1; //fprintf(fp, "class %s %s ", (char*)RTA_DATA(tb[TCA_KIND]), abuf);
 
 	if (filter_ifindex == 0)
-		fprintf(fp, "dev %s ", ll_index_to_name(t->tcm_ifindex));
+		1; //fprintf(fp, "dev %s ", ll_index_to_name(t->tcm_ifindex));
 
 	if (t->tcm_parent == TC_H_ROOT)
-		fprintf(fp, "root ");
+		1; //fprintf(fp, "root ");
 	else {
 		if (filter_qdisc)
-			print_tc_classid(abuf, sizeof(abuf), TC_H_MIN(t->tcm_parent));
+			1; //print_tc_classid(abuf, sizeof(abuf), TC_H_MIN(t->tcm_parent));
 		else
-			print_tc_classid(abuf, sizeof(abuf), t->tcm_parent);
-		fprintf(fp, "parent %s ", abuf);
+			1; //print_tc_classid(abuf, sizeof(abuf), t->tcm_parent);
+		1; //fprintf(fp, "parent %s ", abuf);
 	}
+
 	if (t->tcm_info)
-		fprintf(fp, "leaf %x: ", t->tcm_info>>16);
+		1; //fprintf(fp, "leaf %x: ", t->tcm_info>>16);
 	q = get_qdisc_kind(RTA_DATA(tb[TCA_KIND]));
 	if (tb[TCA_OPTIONS]) {
 		if (q && q->print_copt)
-			q->print_copt(q, fp, tb[TCA_OPTIONS]);
+			1; //q->print_copt(q, fp, tb[TCA_OPTIONS]);
 		else
 			fprintf(fp, "[cannot parse class parameters]");
 	}
-	fprintf(fp, "\n");
+	1; //fprintf(fp, "\n");
+
+	//fprintf(fp, "02\n");// debug 打印信息
+
+	// 打印统计
 	if (show_stats) {
 		struct rtattr *xstats = NULL;
 
 		if (tb[TCA_STATS] || tb[TCA_STATS2]) {
+			// 打印队列输出
 			print_tcstats_attr(fp, tb, " ", &xstats);
-			fprintf(fp, "\n");
+		  // fprintf(fp, "\n");
 		}
 		if (q && (xstats || tb[TCA_XSTATS]) && q->print_xstats) {
-			q->print_xstats(q, fp, xstats ? : tb[TCA_XSTATS]);
-			fprintf(fp, "\n");
+			//q->print_xstats(q, fp, xstats ? : tb[TCA_XSTATS]);
+			1; //fprintf(fp, "\n");
 		}
 	}
 	fflush(fp);
