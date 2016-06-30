@@ -13,9 +13,6 @@
  * Petri Mattila <petri@prihateam.fi> 990308: wrong memset's resulted in faults
  */
 
-#include <sys/socket.h>
-#include <sys/un.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -262,51 +259,6 @@ static int batch(const char *name)
 }
 
 
-/* 新的参数处理代码 */
-static int setargs(char *args, char **argv)
-{
-   int count = 0;
-
-   while (isspace(*args)) ++args;
-   while (*args) {
-     if (argv) argv[count] = args;
-     while (*args && !isspace(*args)) ++args;
-     if (argv && *args) *args++ = '\0';
-     while (isspace(*args)) ++args;
-     count++;
-   }
-   return count;
-}
-
-char **parsedargs(char *args, int *argc)
-{
-   char **argv = NULL;
-   int    argn = 0;
-
-   if (args && *args
-    && (args = strdup(args))
-    && (argn = setargs(args,NULL))
-    && (argv = malloc((argn+1) * sizeof(char *)))) {
-      *argv++ = args;
-      argn = setargs(args,argv);
-   }
-
-   if (args && !argv) free(args);
-
-   *argc = argn;
-   return argv;
-}
-
-void freeparsedargs(char **argv)
-{
-  if (argv) {
-    free(argv[-1]);
-    free(argv-1);
-  }
-}
-
-
-
 int main(int argc, char **argv)
 {
 	int ret;
@@ -361,106 +313,11 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	// 旧的参数初始化代码
-	// argc=5; my_show_queue_argv(&argc, argv);  	// class show 命令初始化
-	// argc=12; my_change_queue_argv(&argc, argv); // class change 命令初始化
-	// printf("debug: default %d argvs: %s %s %s %s\n", argc, argv[1], argv[2], argv[3], argv[4]);
-	// ret = do_cmd(argc-1, argv+1); //旧的参数传入 tc class show
-	// return ret;
+	// 执行 change 命令比 show 命令会增加 3-5us 延时左右
+	argc=5; my_show_queue_argv(&argc, argv);  	// class show 命令初始化
+	argc=12; my_change_queue_argv(&argc, argv); // class change 命令初始化
 
-	// 新的参数初始化变量
-	show_stats=1; //总是打开统计输出 ( 默认 -s)
-	int64_t i;
-	char **argv_new;
-  int argc_new;
-	char *input_cmd_str = NULL;
-	// 从命令行解析参数 sudo ./tc/tc "class show dev s2-eth2"
-	// if (argc > 1) input_cmd_str = argv[1]; // input_cmd_str= "class show dev s2-eth2"
-	// argv_new = parsedargs(input_cmd_str,&argc_new);
-	//
-	// printf("== debug: default %d argvs \n",argc_new);
-	// for (i = 0; i < argc_new; i++)
-	// 	printf("[%s] ",argv_new[i]);
-	// printf("\n");
-	//
-	// ret = do_cmd(argc_new, argv_new); //新的参数处理传入 class show
-	//
-	// freeparsedargs(argv_new); //释放 新参数 的内存占用
-
-	// 建立 socket 监听通道 从 socket 通道解析传入命令 并进行参数处理
-	// #define SOCK_PATH "/dev/socket/echo_socket"
-	char *socket_path = "/tmp/sdn.socket";
-	//char *socket_path = "\0hidden";
-	struct sockaddr_un addr;
-  char buf[100];
-  int fd,cl,rc;
-
-  // if (argc > 1) socket_path=argv[1];
-
-  if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-    perror("socket error");
-    exit(-1);
-  }
-
-  memset(&addr, 0, sizeof(addr));
-  addr.sun_family = AF_UNIX;
-  if (*socket_path == '\0') {
-    *addr.sun_path = '\0';
-    strncpy(addr.sun_path+1, socket_path+1, sizeof(addr.sun_path)-2);
-  } else {
-    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
-  }
-  unlink(socket_path);
-
-	printf ("debug: binding on socket_path: %s\n", socket_path);
-  if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
-    perror("bind error");
-    exit(-1);
-  }
-
-  if (listen(fd, 5) == -1) {
-    perror("listen error");
-    exit(-1);
-  }
-
-  while (1) {
-    if ( (cl = accept(fd, NULL, NULL)) == -1) {
-      perror("accept error");
-      continue;
-    }
-
-		char input_str[128]; // 读入socket传来的控制命令
-    while ( (rc=read(cl,buf,sizeof(buf))) > 0) {
-      printf("debug: read %u bytes: %.*s\n", rc, rc, buf);
-
-			memcpy(input_str, buf, rc); input_str[rc]='\0'; //复制字符串并添加结束字符
-
-			argv_new = parsedargs(input_str,&argc_new);
-
-			printf("== debug: default %d argvs \n",argc_new);
-			for (i = 0; i < argc_new; i++)
-				printf("[%s] ",argv_new[i]);
-			printf("\n");
-
-			ret = do_cmd(argc_new, argv_new); //新的参数处理传入 class show
-			freeparsedargs(argv_new); //释放 新参数 的内存占用
-
-    }
-    if (rc == -1) {
-      perror("read");
-      exit(-1);
-    }
-    else if (rc == 0) {
-      printf("EOF\n");
-      close(cl);
-    }
-  }
-	return 0;
-
-
-
-
-
+	printf("debug: default %d argvs: %s, %s, %s, %s\n", argc, argv[1], argv[2], argv[3], argv[4]);
 	//argv[1]=
 	//return;
 
@@ -468,22 +325,20 @@ int main(int argc, char **argv)
 	//int64_t count = 5; //查询次数
 	int64_t count=1000000; //测速 循环数 average latency: 3506 ns (4us) / real	0m7.015s / CPU 100%
 	unsigned int polling_interval=0; 			//采样间隔时间, 默认0，不休眠
-	//polling_interval =  1; count=100000; 	// 增加采样间隔 1微秒 ; 37-42us / real	0m7.447s / CPU 1-2%
-	//polling_interval = 10; count=100000; 	// 增加采样间隔10微秒 ; 47-50us / real	0m9.412s / CPU 1-2%
+	polling_interval =  1; count=100000; 	// 增加采样间隔 1微秒 ; 37-42us / real	0m7.447s / CPU 1-2%
+	polling_interval = 10; count=100000; 	// 增加采样间隔10微秒 ; 47-50us / real	0m9.412s / CPU 1-2%
 	// #ifdef HAS_CLOCK_GETTIME_MONOTONIC //linux 不用这个定义
 	// 测速开始： 定义时间变量， 获取初始时间
-	int64_t  delta;
+	int64_t i, delta;
   struct timeval start, stop;
 	if (gettimeofday(&start, NULL) == -1) {
       perror("gettimeofday");
       return 1;
   }
 
-
-
 	// 测速循环
 	for (i=0; i<count; i++){
-		// ret = do_cmd(argc-1, argv+1); // 禁止测速循环运行， 测速时再打开
+		ret = do_cmd(argc-1, argv+1); 
 		if (polling_interval != 0) usleep(polling_interval);
 	}
 

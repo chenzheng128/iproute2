@@ -506,7 +506,7 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 
 	parse_rtattr_nested(tbs, TCA_STATS_MAX, rta);
 
-	tbs[TCA_STATS_BASIC]=0; //0 -关闭输出
+	// tbs[TCA_STATS_BASIC]=0; //0 -关闭输出 注释以打开输出
 	if (tbs[TCA_STATS_BASIC]) {
 		struct gnet_stats_basic bs = {0};
 		memcpy(&bs, RTA_DATA(tbs[TCA_STATS_BASIC]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_BASIC]), sizeof(bs)));
@@ -514,7 +514,7 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 			prefix, (unsigned long long) bs.bytes, bs.packets);
 	}
 
-	tbs[TCA_STATS_QUEUE]=0; //0 -关闭输出
+	// tbs[TCA_STATS_QUEUE]=-1; //0 -关闭输出 注释以打开输出
 	if (tbs[TCA_STATS_QUEUE]) {
 		struct gnet_stats_queue q = {0};
 		memcpy(&q, RTA_DATA(tbs[TCA_STATS_QUEUE]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_QUEUE]), sizeof(q)));
@@ -522,7 +522,7 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 			q.drops, q.overlimits, q.requeues);
 	}
 
-	tbs[TCA_STATS_RATE_EST]=0; //0 -关闭输出
+	// tbs[TCA_STATS_RATE_EST]=0; //0 -关闭输出
 	if (tbs[TCA_STATS_RATE_EST]) {
 		struct gnet_stats_rate_est re = {0};
 		memcpy(&re, RTA_DATA(tbs[TCA_STATS_RATE_EST]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_RATE_EST]), sizeof(re)));
