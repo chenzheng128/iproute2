@@ -11,6 +11,15 @@
 - tc.c 建立 socket 监听通道， 从 socket 通道解析传入命令 并进行参数处理后输出
 TODO： 将输出结果由服务端转移至客户端输出
 
+## 代码分析
+输入 class show dev s2-eth后的调用关系
+- tc.c main() ->
+- tc_class.c tc_class_list() -> rtnl_dump_filter() ->
+   * lib/libnetlink.c  int rtnl_dump_filter() {} -> rtnl_dump_filter_l() 收到 消息类型 h->nlmsg_type == NLMSG_DONE 时, 结束处理.
+- tc_class.c rtnl_dump_filter() 在参数中回调了 print_class() ->
+- tc_class.c  print_class()
+
+
 ## tc 源代码准备与控制延时测速
 1. 初始编译, 移除不需要的  arpd, 避免出现 db185.h 找不到的情况
 ```

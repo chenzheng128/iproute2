@@ -30,3 +30,5 @@ series
 .gdbinit
 .gdb_history
 *.gdb
+
+tc/unix_tc_client
