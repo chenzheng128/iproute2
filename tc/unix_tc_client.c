@@ -9,7 +9,7 @@ char *socket_path = "/tmp/sdn.socket";
 
 int main(int argc, char *argv[]) {
   struct sockaddr_un addr;
-  char buf[100];
+  char buf[1024];
   int fd,rc;
 
   if (argc > 1) socket_path=argv[1];
@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
   }
 
   int readcount = 0;
+
   while( (rc=read(STDIN_FILENO, buf, sizeof(buf))) > 0) {
     if (write(fd, buf, rc) != rc) {
       if (rc > 0) fprintf(stderr,"partial write");
@@ -47,9 +48,11 @@ int main(int argc, char *argv[]) {
           // %.*s 表示打印buf 的 readcount 长度; 如果不设定readcount长度直接打印 %s;
           // 就应该调用后面的 memset 对buf 清零,
           // 而是会因为buf中的字符不会结束在 \0 而打印出一些剩余内容否则
-        printf("server echo %u bytes: \n%.*s", readcount, readcount, buf);
+        printf("[ svr echo length]: %u bytes\n[ svr echo content ]: %.*s \n", readcount, readcount-1, buf);
     }
     memset(&buf, 0, sizeof(buf)); //每次结束时注意清零buf, 便于字符串正常结束
+    printf("plearse input your command: ");
+    fflush(0);
   }
 
   return 0;

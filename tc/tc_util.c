@@ -9,6 +9,7 @@
  * Authors:	Alexey Kuznetsov, <kuznet@ms2.inr.ac.ru>
  *
  */
+#include <sys/socket.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -499,31 +500,41 @@ void print_tcstats2_attr_empty(FILE *fp, struct rtattr *rta, char *prefix, struc
 	parse_rtattr_nested(tbs, TCA_STATS_MAX, rta);
 }
 
+extern int CLIENT_SOCK_FD; // tc.c 全局变量
+extern int ECHO_TO_SERVER; //  输出在 1 - 服务端  0 -客户端
+
 void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtattr **xstats)
 {
+	char str_buf[256];
+
 	SPRINT_BUF(b1);
 	struct rtattr *tbs[TCA_STATS_MAX + 1];
 
 	parse_rtattr_nested(tbs, TCA_STATS_MAX, rta);
 
-	// tbs[TCA_STATS_BASIC]=0; //0 -关闭输出 注释以打开输出
-	if (tbs[TCA_STATS_BASIC]) {
+	if (0){ //0 -关闭输出 注释以打开输出
+	// if (tbs[TCA_STATS_BASIC]) {
 		struct gnet_stats_basic bs = {0};
 		memcpy(&bs, RTA_DATA(tbs[TCA_STATS_BASIC]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_BASIC]), sizeof(bs)));
 		fprintf(fp, "%sSent %llu bytes %u pkt",
 			prefix, (unsigned long long) bs.bytes, bs.packets);
 	}
 
-	// tbs[TCA_STATS_QUEUE]=-1; //0 -关闭输出 注释以打开输出
 	if (tbs[TCA_STATS_QUEUE]) {
 		struct gnet_stats_queue q = {0};
 		memcpy(&q, RTA_DATA(tbs[TCA_STATS_QUEUE]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_QUEUE]), sizeof(q)));
-		fprintf(fp, " (dropped %u (cuc), overlimits %u requeues %u) ",
-			q.drops, q.overlimits, q.requeues);
+		if (ECHO_TO_SERVER) {
+			fprintf(fp, " (dropped %u (cuc), overlimits %u requeues %u) ",
+				q.drops, q.overlimits, q.requeues);
+		} else {
+			sprintf(str_buf, " (dropped %u (cuc), overlimits %u requeues %u) ",
+				q.drops, q.overlimits, q.requeues);
+			write(CLIENT_SOCK_FD, str_buf, strlen(str_buf));
+		}
 	}
 
-	// tbs[TCA_STATS_RATE_EST]=0; //0 -关闭输出
-	if (tbs[TCA_STATS_RATE_EST]) {
+	if (0) { //0 -关闭输出 注释以打开输出
+	// if (tbs[TCA_STATS_RATE_EST]) {
 		struct gnet_stats_rate_est re = {0};
 		memcpy(&re, RTA_DATA(tbs[TCA_STATS_RATE_EST]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_RATE_EST]), sizeof(re)));
 		fprintf(fp, "\n%srate %s %upps ",
@@ -533,10 +544,16 @@ void print_tcstats2_attr(FILE *fp, struct rtattr *rta, char *prefix, struct rtat
 	if (tbs[TCA_STATS_QUEUE]) {
 		struct gnet_stats_queue q = {0};
 		memcpy(&q, RTA_DATA(tbs[TCA_STATS_QUEUE]), MIN(RTA_PAYLOAD(tbs[TCA_STATS_QUEUE]), sizeof(q)));
-		if (!tbs[TCA_STATS_RATE_EST])
-			fprintf(fp, "\n%s", prefix);
-		fprintf(fp, "backlog %s %up (cuc) requeues %u ",
-			sprint_size(q.backlog, b1), q.qlen, q.requeues);
+		if (ECHO_TO_SERVER) {
+			if (!tbs[TCA_STATS_RATE_EST])
+				fprintf(fp, "\n%s", prefix);
+			fprintf(fp, "backlog %s %up (cuc) requeues %u \n",
+				sprint_size(q.backlog, b1), q.qlen, q.requeues);
+		} else {
+			sprintf(str_buf, "backlog %s %up (cuc) requeues %u \n",
+				sprint_size(q.backlog, b1), q.qlen, q.requeues);
+			write(CLIENT_SOCK_FD, str_buf, strlen(str_buf));
+		}
 	}
 
 	if (xstats)

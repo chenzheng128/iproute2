@@ -4,12 +4,14 @@
 
 ## unix socket 监听服务
 
-增加  unix socket 监听服务
+- TODO: 将测速代码转移至客户端, 测试速度 
+- tc.c 定义 //全局变量FD int CLIENT_SOCK_FD=0; , 用于其他程序tc_util.c write(CLIENT_SOCK_FD) 回客户端; int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
+- tc.c 建立 socket 监听通道， 从 socket 通道解析传入命令 并进行参数处理后输出
 - 将原有的测速代码 tc.c 复制保存为 tc_bench.c
 - tc_util.c 打开部分输出
 - tc.c 新的参数初始化变量
-- tc.c 建立 socket 监听通道， 从 socket 通道解析传入命令 并进行参数处理后输出
-TODO： 将输出结果由服务端转移至客户端输出
+
+
 
 ## 代码分析
 输入 class show dev s2-eth后的调用关系

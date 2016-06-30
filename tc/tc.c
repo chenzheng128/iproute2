@@ -306,6 +306,10 @@ void freeparsedargs(char **argv)
 }
 
 
+// 定义全局变量
+int DEBUG = 0;			//打印输出
+int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
+int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
 
 int main(int argc, char **argv)
 {
@@ -430,11 +434,16 @@ int main(int argc, char **argv)
 	    	perror("accept error");
 	    	continue;
 	    }
+		CLIENT_SOCK_FD = cl;
 
 		char input_str[128]; // 读入socket传来的控制命令
 		int	 wcount = 0;
 		printf("debug: wating new client to read()...\n");
 	    while ( (readcount=read(cl,buf,sizeof(buf))) > 0) {
+			//if (readcount<2){
+			//	printf("illegal command strlen<2");
+			//	continue;
+			//}
 	      	printf("debug: read %u bytes: %.*s\n", readcount, readcount, buf);
 
 			memcpy(input_str, buf, readcount); input_str[readcount]='\0'; //复制字符串并添加结束字符
@@ -449,14 +458,14 @@ int main(int argc, char **argv)
 			ret = do_cmd(argc_new, argv_new); //新的参数处理传入 class show
 			freeparsedargs(argv_new); //释放 新参数 的内存占用
 
-			// 这里一定要写回数据, 否则client再发数据来也接受不到, 为什么?
+			// TODO 这里一定要写回数据, 否则client再发数据来也接受不到, 为什么?
 			if ((wcount=write(cl, buf, readcount)) != readcount) { // echo 单行缓存
 	          	if (wcount > 0) fprintf(stderr,"partial write %d \n", wcount);
 	          	else {
 	            	perror("write error");
 	            	exit(-1);
-          	}
-      }
+          		}
+      		}
 	    }
 	    if (readcount == -1) {
 	      	perror("read");
