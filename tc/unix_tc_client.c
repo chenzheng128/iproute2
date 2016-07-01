@@ -70,9 +70,7 @@ int main(int argc, char *argv[]) {
 	int64_t bench_total=1000000; //测速 循环数 average latency: 3506 ns (4us) / real	0m7.015s / CPU 100%
 	unsigned int polling_interval=0; 			//采样间隔时间, 默认0，不休眠
   polling_interval =  20; bench_total=100000; //average latency: 79083 ns avg_bytes(should equals to interactive mode): 247
-	//polling_interval =  1; bench_total=100000; 	// 增加采样间隔 1微秒 ; 37-42us / real	0m7.447s / CPU 1-2%
-	//polling_interval = 10; bench_total=100000; 	// 增加采样间隔10微秒 ; 47-50us / real	0m9.412s / CPU 1-2%
-	// #ifdef HAS_CLOCK_GETTIME_MONOTONIC //linux 不用这个定义
+
 	// 测速开始： 定义时间变量， 获取初始时间
 
 

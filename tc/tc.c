@@ -35,9 +35,10 @@
 
 // zhchen 定义全局变量
 int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
-int DEBUG = 0;			//打印输出
+int DEBUG = 1;			//0-打印输出 1-不打印
 int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
 char VAR_DIR[]="/var/sdn/";
+#define LOG_DEBUG(format, ...) if(!DEBUG) {fprintf(stdout, format, __VA_ARGS__);};
 
 int show_stats = 0;
 int show_details = 0;
@@ -442,16 +443,16 @@ int main(int argc, char **argv)
 			//	printf("illegal command strlen<2");
 			//	continue;
 			//}
-	      	printf("debug: read %u bytes: %.*s\n", readcount, readcount, buf);
+	      	LOG_DEBUG("debug: read %u bytes: %.*s\n", readcount, readcount, buf);
 
 			memcpy(input_str, buf, readcount); input_str[readcount]='\0'; //复制字符串并添加结束字符
 
 			argv_new = parsedargs(input_str,&argc_new);
 
-			printf("== debug: default %d argvs \n",argc_new);
+			LOG_DEBUG("== debug: default %d argvs \n",argc_new);
 			for (i = 0; i < argc_new; i++)
-				printf("[%s] ",argv_new[i]);
-			printf("\n");
+				LOG_DEBUG("[%s] ",argv_new[i]);
+			LOG_DEBUG("%s","\n");
 
 			ret = do_cmd(argc_new, argv_new); //新的参数处理传入 class show
 			freeparsedargs(argv_new); //释放 新参数 的内存占用
