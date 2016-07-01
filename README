@@ -1,4 +1,4 @@
-# 队列拥塞控制仿真 (基于tc)
+# 队列拥塞agent控制仿真 (基于tc)
 
 ## 安装准备
 ```
@@ -9,21 +9,26 @@
  sudo chown `id -u`:`id -g` /var/sdn
 ```
 
-## 运行
- 启动agent服务 `make && ./tc/tc h1` # 建立 h1.socket 监听
+## agent运行
+ 启动agent服务 `make && ./tc/tc h1` # 建立 /var/sdn/h1.socket 监听
  连接agent服务 `make && ./tc/unix_tc_client h1` 连接 h1.socket 发送 tc命令， 如 `help` `class show dev s2-eth1`
 
 目前基于 tc 的队列查询（带宽策略修改）的延时约为 40-50us。
 
+## agent 测速
+ 启动agent服务 `while true; do  make && ./tc/tc bench; done`  # 建立 /var/sdn/bench.socket 监听
+ 连接agent服务进行测速 ` make && ./tc/unix_tc_client bench` # polling_interval =  20; bench_total=100000; //average latency: 79083 ns avg_bytes(should equals to interactive mode): 247
+
 ## unix socket 监听服务
 
 - TODO: 将测速代码转移至客户端, 测试速度
+- 优化命令行启动代码，传入socket名称参数
+- 代码重构， 不用代码移动至 `cuc_helper.c`
 - tc.c 定义 //全局变量FD int CLIENT_SOCK_FD=0; , 用于其他程序tc_util.c write(CLIENT_SOCK_FD) 回客户端; int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
 - tc.c 建立 socket 监听通道， 从 socket 通道解析传入命令 并进行参数处理后输出
 - 将原有的测速代码 tc.c 复制保存为 tc_bench.c
 - tc_util.c 打开部分输出
 - tc.c 新的参数初始化变量
-
 
 
 ## 代码分析

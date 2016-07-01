@@ -464,44 +464,9 @@ int main(int argc, char **argv)
 	      	close(cl);
 	    }
   	}
-	return 0;
 
-
-
-	// 测速相关变量定义
-	//int64_t count = 5; //查询次数
-	int64_t count=1000000; //测速 循环数 average latency: 3506 ns (4us) / real	0m7.015s / CPU 100%
-	unsigned int polling_interval=0; 			//采样间隔时间, 默认0，不休眠
-	//polling_interval =  1; count=100000; 	// 增加采样间隔 1微秒 ; 37-42us / real	0m7.447s / CPU 1-2%
-	//polling_interval = 10; count=100000; 	// 增加采样间隔10微秒 ; 47-50us / real	0m9.412s / CPU 1-2%
-	// #ifdef HAS_CLOCK_GETTIME_MONOTONIC //linux 不用这个定义
-	// 测速开始： 定义时间变量， 获取初始时间
-	int64_t  delta;
-  struct timeval start, stop;
-	if (gettimeofday(&start, NULL) == -1) {
-      perror("gettimeofday");
-      return 1;
-  }
-
-
-
-	// 测速循环
-	for (i=0; i<count; i++){
-		// ret = do_cmd(argc-1, argv+1); // 禁止测速循环运行， 测速时再打开
-		if (polling_interval != 0) usleep(polling_interval);
-	}
-
+	
 	rtnl_close(&rth);
-
-	// 获取结束时间并统计打印
-	if (gettimeofday(&stop, NULL) == -1) {
-		perror("gettimeofday");
-		return 1;
-	}
-	delta =
-			(stop.tv_sec - start.tv_sec) * 1000000000 + (stop.tv_usec - start.tv_usec) * 1000;
-	printf("average latency: %li ns\n", delta / (count * 2));
-  // 测速结束
 
 	return ret;
 }

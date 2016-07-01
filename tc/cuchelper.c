@@ -1,4 +1,13 @@
 
+void bench_cycle(){ // tc.c mian()
+	// 测速循环
+	for (i=0; i<count; i++){
+		if (polling_interval != 0) usleep(polling_interval);
+		ret = do_cmd(argc-1, argv+1); // 禁止测速循环运行， 测速时再打开
+
+	}
+
+}
 
 
 // 旧的参数初始化代码 与 helper() 函数
@@ -11,7 +20,7 @@
 // 简化测试命令为： make && ./tc/tc -s show
 // 实际执行： default run command: tc -d -s class show dev s2-eth1
 // 参数初始化 help代码
-void my_show_queue_argv(int *argc, char **argv){
+void my_show_queue_argv(int *argc, char **argv){ // tc.c mian()
 	// &argc=5;
 	++show_stats; // turn on stats 默认打开统计， 不需要 -s参数
 	// ++show_details; #turn of detail
