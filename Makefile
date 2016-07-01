@@ -29,7 +29,13 @@ ADDLIB+=ipx_ntop.o ipx_pton.o
 
 CC = gcc
 HOSTCC = gcc
-CCOPTS = -D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall
+
+# Default
+# CCOPTS = -D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall
+# -w # disable warning -g # enable debug
+CCOPTS = -g -D_GNU_SOURCE -O2 -Wstrict-prototypes -w
+#CFLAGS = -g -w
+
 CFLAGS = $(CCOPTS) -I../include $(DEFINES)
 YACCFLAGS = -d -t -v
 

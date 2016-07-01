@@ -1,10 +1,23 @@
 # 队列拥塞控制仿真 (基于tc)
 
+## 安装准备
+```
+ git clone https://github.com/chenzheng128/iproute2/
+ cd iproute2
+ git checkout zhchen #切换至开发分支
+ sudo mkdir -p /var/sdn  #建立临时文件目录并分配当前用户权限
+ sudo chown `id -u`:`id -g` /var/sdn
+```
+
+## 运行
+ 启动agent服务 `make && ./tc/tc h1` # 建立 h1.socket 监听
+ 连接agent服务 `make && ./tc/unix_tc_client h1` 连接 h1.socket 发送 tc命令， 如 `help` `class show dev s2-eth1`
+
 目前基于 tc 的队列查询（带宽策略修改）的延时约为 40-50us。
 
 ## unix socket 监听服务
 
-- TODO: 将测速代码转移至客户端, 测试速度 
+- TODO: 将测速代码转移至客户端, 测试速度
 - tc.c 定义 //全局变量FD int CLIENT_SOCK_FD=0; , 用于其他程序tc_util.c write(CLIENT_SOCK_FD) 回客户端; int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
 - tc.c 建立 socket 监听通道， 从 socket 通道解析传入命令 并进行参数处理后输出
 - 将原有的测速代码 tc.c 复制保存为 tc_bench.c

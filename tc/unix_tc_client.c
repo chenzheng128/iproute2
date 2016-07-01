@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-char *socket_path = "/tmp/sdn.socket";
+char socket_path[128] = "/tmp/sdn.socket";
+//char *socket_path = "/tmp/sdn.socket";
 // char *socket_path = "\0hidden";
 
 int main(int argc, char *argv[]) {
@@ -12,7 +13,16 @@ int main(int argc, char *argv[]) {
   char buf[1024];
   int fd,rc;
 
-  if (argc > 1) socket_path=argv[1];
+
+  if (argc > 1) {
+    //使用命令行参数建立unix socket
+    char VAR_DIR[]="/var/sdn/";
+    memset(&socket_path, 0, sizeof(socket_path)); //
+    strcpy(socket_path, VAR_DIR);
+  	strcat(socket_path, argv[1]);
+  	strcat(socket_path, ".socket");
+  	printf ("debug: build socket_path: %s\n", socket_path);
+  }
 
   if ( (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
     perror("socket error");

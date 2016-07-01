@@ -310,6 +310,7 @@ void freeparsedargs(char **argv)
 int DEBUG = 0;			//打印输出
 int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
 int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
+char VAR_DIR[]="/var/sdn/";
 
 int main(int argc, char **argv)
 {
@@ -365,36 +366,23 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	// 旧的参数初始化代码
-	// argc=5; my_show_queue_argv(&argc, argv);  	// class show 命令初始化
-	// argc=12; my_change_queue_argv(&argc, argv); // class change 命令初始化
-	// printf("debug: default %d argvs: %s %s %s %s\n", argc, argv[1], argv[2], argv[3], argv[4]);
-	// ret = do_cmd(argc-1, argv+1); //旧的参数传入 tc class show
-	// return ret;
-
 	// 新的参数初始化变量
 	show_stats=1; //总是打开统计输出 ( 默认 -s)
 	int64_t i;
 	char **argv_new;
-  	int argc_new;
+	int argc_new;
 	char *input_cmd_str = NULL;
-	// 从命令行解析参数 sudo ./tc/tc "class show dev s2-eth2"
-	// if (argc > 1) input_cmd_str = argv[1]; // input_cmd_str= "class show dev s2-eth2"
-	// argv_new = parsedargs(input_cmd_str,&argc_new);
-	//
-	// printf("== debug: default %d argvs \n",argc_new);
-	// for (i = 0; i < argc_new; i++)
-	// 	printf("[%s] ",argv_new[i]);
-	// printf("\n");
-	//
-	// ret = do_cmd(argc_new, argv_new); //新的参数处理传入 class show
-	//
-	// freeparsedargs(argv_new); //释放 新参数 的内存占用
+
 
 	// 建立 socket 监听通道 从 socket 通道解析传入命令 并进行参数处理
 	// #define SOCK_PATH "/dev/socket/echo_socket"
-	char *socket_path = "/tmp/sdn.socket";
 	//char *socket_path = "\0hidden";
+	// char *socket_path = "/tmp/sdn.socket";
+	char socket_path[128];
+	strcpy(socket_path, VAR_DIR);
+	strcat(socket_path, argv[1]);
+	strcat(socket_path, ".socket");
+	printf ("debug: build socket_path: %s\n", socket_path);
 	struct sockaddr_un addr;
   	int fd;
 
@@ -480,11 +468,6 @@ int main(int argc, char **argv)
 
 
 
-
-
-	//argv[1]=
-	//return;
-
 	// 测速相关变量定义
 	//int64_t count = 5; //查询次数
 	int64_t count=1000000; //测速 循环数 average latency: 3506 ns (4us) / real	0m7.015s / CPU 100%
@@ -521,37 +504,4 @@ int main(int argc, char **argv)
   // 测速结束
 
 	return ret;
-}
-
-// 简化测试命令为： make && ./tc/tc -s show
-// 实际执行： default run command: tc -d -s class show dev s2-eth1
-void my_show_queue_argv(int *argc, char **argv){
-	// &argc=5;
-	++show_stats; // turn on stats 默认打开统计， 不需要 -s参数
-	// ++show_details; #turn of detail
-	//char *av=
-	argv[1]="class";
-	argv[2]="show";
-	argv[3]="dev";
-	argv[4]="s2-eth2";
-}
-
-// 简化测试命令为： make && ./tc/tc -s change
-// 实际执行： sudo tc class change dev s2-eth2 parent 1:fffe classid 1:2 htb rate 2mbit burst 15k
-void my_change_queue_argv(int *argc, char **argv){
-	// &argc=5;
-	++show_stats; // turn on stats 默认打开统计， 不需要 -s参数
-	// ++show_details; #turn of detail
-	//char *av=
-	argv[1]="class";
-	argv[2]="change";
-	argv[3]="dev";
-	argv[4]="s2-eth2";
-	argv[5]="parent";
-	argv[6]="1:fffe";
-	argv[7]="classid";
-	argv[8]="1:2";
-	argv[9]="htb";
-	argv[10]="rate";
-	argv[11]="2mbit";
 }
