@@ -33,6 +33,12 @@
 #include "tc_util.h"
 #include "tc_common.h"
 
+// zhchen 定义全局变量
+int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
+int DEBUG = 0;			//打印输出
+int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
+char VAR_DIR[]="/var/sdn/";
+
 int show_stats = 0;
 int show_details = 0;
 int show_raw = 0;
@@ -182,12 +188,20 @@ noexist:
 	return q;
 }
 
+
 static void usage(void)
 {
+	char str_buf[512];
 	fprintf(stderr, "Usage: tc [ OPTIONS ] OBJECT { COMMAND | help （CUC）}\n"
 			"       tc [-force] -batch filename\n"
 	                "where  OBJECT := { qdisc | class | filter | action | monitor }\n"
 	                "       OPTIONS := { -s[tatistics] | -d[etails] | -r[aw] | -p[retty] | -b[atch] [filename] }\n");
+	sprintf(str_buf, "Usage: tc [ OPTIONS ] OBJECT { COMMAND | help （CUC）}\n"
+			"       tc [-force] -batch filename\n"
+	                "where  OBJECT := { qdisc | class | filter | action | monitor }\n"
+	                "       OPTIONS := { -s[tatistics] | -d[etails] | -r[aw] | -p[retty] | -b[atch] [filename] }\n");
+
+	write(CLIENT_SOCK_FD, str_buf, strlen(str_buf));
 }
 
 static int do_cmd(int argc, char **argv)
@@ -306,11 +320,7 @@ void freeparsedargs(char **argv)
 }
 
 
-// 定义全局变量
-int DEBUG = 0;			//打印输出
-int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
-int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
-char VAR_DIR[]="/var/sdn/";
+
 
 int main(int argc, char **argv)
 {
@@ -465,7 +475,6 @@ int main(int argc, char **argv)
 	    }
   	}
 
-	
 	rtnl_close(&rth);
 
 	return ret;
