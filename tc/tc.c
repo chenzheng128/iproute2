@@ -35,7 +35,7 @@
 
 // zhchen 定义全局变量
 int CLIENT_SOCK_FD = 0; 	//全局变量FD, 用于其他程序write(CLIENT_SOCK_FD)回客户端
-int DEBUG = 1;			//0-打印输出 1-不打印
+int DEBUG = 0;			//0-打印输出 1-不打印
 int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
 char VAR_DIR[]="/var/sdn/";
 #define LOG_DEBUG(format, ...) if(!DEBUG) {fprintf(stdout, format, __VA_ARGS__);};
@@ -444,10 +444,19 @@ int main(int argc, char **argv)
 			//	continue;
 			//}
 	      	LOG_DEBUG("debug: read %u bytes: %.*s\n", readcount, readcount, buf);
+			// debug: 输入为 1回车时, 输出 first 2 bytes: 51 10 以回车结尾
+			// LOG_DEBUG("debug: first 2 bytes: %d %d\n",buf[0], buf[1]);
 
 			memcpy(input_str, buf, readcount); input_str[readcount]='\0'; //复制字符串并添加结束字符
 
 			argv_new = parsedargs(input_str,&argc_new);
+
+			if (argc_new == 0) {
+				sprintf(buf, "sorry argc=%d not enough \n",argc_new);
+				write(cl, buf, strlen(buf));
+				continue;
+			}
+
 
 			LOG_DEBUG("== debug: default %d argvs \n",argc_new);
 			for (i = 0; i < argc_new; i++)

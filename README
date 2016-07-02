@@ -21,7 +21,7 @@
 
 ## unix socket 监听服务
 
-- TODO: 将测速代码转移至客户端, 测试速度
+- 将测速代码转移至客户端, 测试速度
 - 优化命令行启动代码，传入socket名称参数
 - 代码重构， 不用代码移动至 `cuc_helper.c`
 - tc.c 定义 //全局变量FD int CLIENT_SOCK_FD=0; , 用于其他程序tc_util.c write(CLIENT_SOCK_FD) 回客户端; int ECHO_TO_SERVER = 0; //控制命令class show dev s1-eth3输出位置 输出在 1 - 服务端  0 -客户端
@@ -29,6 +29,10 @@
 - 将原有的测速代码 tc.c 复制保存为 tc_bench.c
 - tc_util.c 打开部分输出
 - tc.c 新的参数初始化变量
+
+## 开发注意
+- TODO: 调试 gcc -g 参数便于调试
+- 在 tc.c 循环中如果收到read()数据后一定要回写write()数据, 否则按现有的客户端逻辑在read()是会被blocking中,因为收不到echo回来的数据. 客户端代码无响应时需检查server逻辑,是否没有回写.
 
 
 ## 代码分析
